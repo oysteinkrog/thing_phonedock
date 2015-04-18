@@ -81,7 +81,7 @@ cable_connector_thickness = 8;
 
 phone_well_wall_thickness = 3.5;
 phone_well_thickness = phone_thickness+5;
-phone_well_height = 12;
+phone_well_height = 8;
 
 module phone_well()
 {
