@@ -1,56 +1,18 @@
-$fn=100;
+/*$fn=4;*/
+$fa = 2;
+$fs = .2;
 
-//use <MCAD/shapes.scad>
+include <thing_libutils/system.scad>
+include <thing_libutils/units.scad>
+
+use <thing_libutils/shapes.scad>
+
 use <MCAD/boxes.scad>
-
-module size_align(size=[10,10,10], align=[0,0,0])
-{
-    translate([align[0]*size[0]/2,align[1]*size[1]/2,align[2]*size[2]/2])
-    {
-        children();
-    }
-}
-
-module cubea(size=[10,10,10], align=[0,0,0], extrasize=[0,0,0], extrasize_align=[0,0,0])
-{
-    size_align(extrasize,extrasize_align)
-    {
-        size_align(size,align)
-        {
-            cube(size+extrasize, center=true);
-        }
-    }
-}
 
 module galaxy_s5()
 {
     translate([-36.5,-73,-5]) import("SAMSUNG GALAXY S5.STL");
 }
-
-module upright()
-{
-    // main body
-    difference()
-    {
-        cubea([width,thickness+5,height],[0,0,1],[0,0,0],[0,1,0]);
-
-        union()
-        {
-            translate([0,pad_offset,pad_pos])
-            {
-                cubea([pad_width+pad_spacing,pad_thickness,pad_width+pad_spacing],[0,0,0], [0,0,10], [0,0,1]);
-                cubea([pad_width+pad_spacing-5,pad_thickness,pad_width+pad_spacing],[0,0,0], [0,6,10], [0,-1,1]);
-            }
-        }
-        cylinder(r=cable_radius,h=100);
-
-        // charging pad
-        translate([0,pad_offset,pad_pos])
-            rotate([90,0,0])
-            roundedBox([pad_width,pad_width,pad_thickness], 13, true);
-    }
-}
-
 
 cable_radius=2;
 
@@ -63,7 +25,7 @@ pad_pos = pad_width/2+pad_from_floor;
 
 width = pad_width+5;
 height = pad_from_floor+pad_width;
-thickness = pad_thickness;
+thickness = pad_thickness+5;
 
 rot_degrees = -25;
 
@@ -71,7 +33,6 @@ pad_offset = -0.8;
 
 phone_width = 72.5;
 phone_thickness = 11;
-phone_offset = -11.5;
 
 bottom_height = 9;
 
@@ -79,21 +40,66 @@ cable_connector_width = 15;
 cable_connector_height = 27;
 cable_connector_thickness = 8;
 
-phone_well_wall_thickness = 3.5;
-phone_well_thickness = phone_thickness+5;
-phone_well_height = 8;
+phone_well_wall_thickness = 3*mm;
+phone_well_thickness = phone_thickness+5*mm;
+phone_well_height = 5*mm;
 
-module phone_well()
+module upright()
 {
-    // s5 holder/well
-    translate([0,phone_offset,0])
+    // main body
+    translate(Z*5*mm)
+    difference()
     {
-        difference()
-        {
-            cubea([width,phone_well_thickness+phone_well_wall_thickness,phone_well_height],[0,0,1],[0,0,0],[0,1,0]);
+        rcubea(size=[width,thickness,height], align=Z);
 
-            cubea([phone_width+2,phone_well_thickness,phone_well_height],[0,0,1],[0,0,10],[0,0,1]);
+        union()
+        {
+            translate([0,pad_offset,pad_pos])
+            {
+                rcubea(
+                    size=[pad_width+pad_spacing,pad_thickness,pad_width+pad_spacing],
+                    extrasize=[0,0,10],
+                    extrasize_align=Z);
+
+                rcubea(
+                    size=[pad_width+pad_spacing-5,pad_thickness,pad_width+pad_spacing],
+                    extrasize=[0,6,10],
+                    extrasize_align=-Y+Z);
+            }
         }
+
+        cylinder(r=cable_radius, h=100);
+
+        // charging pad
+        translate([0,pad_offset,pad_pos])
+        rotate([90,0,0])
+        roundedBox([pad_width,pad_width,pad_thickness], 13, true);
+    }
+}
+
+module phone_well(part)
+{
+    if(part=="pos")
+    {
+        rcubea(
+            size=[width,phone_well_thickness,phone_well_height],
+            align=Z,
+            extrasize=Y*phone_well_wall_thickness+Z*phone_well_height,
+            extrasize_align=-Y+Z);
+    }
+    else if(part=="neg")
+    {
+        rcubea(
+            size=[phone_width+2,phone_well_thickness,phone_well_height],
+            align=Z,
+            extrasize=Z*1000,
+            extrasize_align=Z);
+
+        translate(Y*-1)
+        translate(Z*4)
+        rcubea(
+            size=[20,100,1000],
+            align=Z-Y);
     }
 }
 
@@ -104,51 +110,50 @@ module dock()
         union()
         {
             rotate([rot_degrees,0,0])
+            upright();
+
+            hull()
             {
-                translate([0,0,5])
-                    upright();
+                rotate([rot_degrees,0,0])
+                translate(-Y*(thickness))
+                phone_well(part="pos");
 
-                phone_well();
-
-                /*translate([0,phone_offset-2,pad_pos])*/
-                /*rotate([90,0,0])*/
-                /*#galaxy_s5();*/
+                // main body
+                rcubea(
+                    size=[width,width-30,bottom_height],
+                    align=Y+Z,
+                    extrasize=Y*(phone_well_thickness+3.2*mm),
+                    extrasize_align=-Y);
             }
 
-
-            // main body
-            cubea([width,width-30,bottom_height],[0,1,1],[0,phone_well_thickness+3.2,0],[0,-1,0]);
+            /*translate([0,phone_offset-2,pad_pos])*/
+            /*rotate([90,0,0])*/
+            /*#galaxy_s5();*/
         }
-
 
         rotate([rot_degrees,0,0])
-        {
-            translate([0,0,5])
-            {
-                translate([0,pad_offset,pad_pos])
-                {
-                    rotate([90,0,0])
-                    {
-                        translate([0,-45,0])
-                        {
-                            // vertical cable cutout
-                            cubea([cable_connector_width,cable_connector_height,cable_connector_thickness],[0,0,0],[0,50,0],[0,-1,0]);
-                        }
-                    }
-                }
-            }
+        translate(-Y*(thickness/2+phone_well_thickness/2))
+        phone_well(part="neg");
 
-
-        }
+        // vertical cable cutout
+        rotate([rot_degrees,0,0])
+        translate([0,0,5])
+        translate([0,pad_offset,pad_pos])
+        rotate([90,0,0])
+        translate([0,-45,0])
+        rcubea(
+            size=[cable_connector_width,cable_connector_height,cable_connector_thickness],
+            extrasize=Y*50,
+            extrasize_align=-Y);
 
         // cable cutout trench
         translate([0,0,1])
         {
-            cubea([cable_radius*2,width-20,cable_radius*2],[0,1,1],[0,0,0],[0,-1,0]);
-            cubea([cable_radius*5,10,cable_radius*7],[0,1,1],[0,0,0],[0,-1,0]);
+            cubea(size=[cable_radius*2,width-20,cable_radius*2], align=Y+Z);
+            cubea(size=[cable_radius*5,10,cable_radius*7], align=Y+Z);
         }
 
-        cubea([cable_radius*1.3,width-20,cable_radius*1.3],[0,1,1],[0,0,0],[0,-1,0]);
+        cubea(size=[cable_radius*1.3,width-20,cable_radius*1.3], align=Y+Z);
     }
 }
 
