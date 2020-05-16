@@ -31,6 +31,11 @@ rot_degrees = -25;
 
 pad_offset = -0.8;
 
+// s5
+/*phone_width = 72.5;*/
+/*phone_thickness = 11;*/
+
+// s9+
 phone_width = 72.5;
 phone_thickness = 11;
 
@@ -40,9 +45,9 @@ cable_connector_width = 15;
 cable_connector_height = 27;
 cable_connector_thickness = 8;
 
-phone_well_wall_thickness = 3*mm;
-phone_well_thickness = phone_thickness+5*mm;
-phone_well_height = 5*mm;
+phone_well_wall_thickness = 2*mm;
+phone_well_thickness = phone_thickness+2*mm;
+phone_well_height = 3*mm;
 
 module upright()
 {
@@ -115,7 +120,7 @@ module dock()
             hull()
             {
                 rotate([rot_degrees,0,0])
-                translate(-Y*(thickness))
+                translate(-Y*(thickness/2+phone_well_thickness/2))
                 phone_well(part="pos");
 
                 // main body
@@ -128,7 +133,7 @@ module dock()
 
             /*translate([0,phone_offset-2,pad_pos])*/
             /*rotate([90,0,0])*/
-            /*#galaxy_s5();*/
+            /*galaxy_s5();*/
         }
 
         rotate([rot_degrees,0,0])
